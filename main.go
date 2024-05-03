@@ -12,6 +12,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 )
 
 type apiConfig struct {
@@ -19,7 +20,7 @@ type apiConfig struct {
 }
 
 func main() {
-	err := godotenv.Load(".env")
+	err := godotenv.Load()
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -41,7 +42,10 @@ func main() {
 		log.Fatalln("Can't connect to db: ", dbErr)
 	}
 
-	apiCfg := apiConfig{DB: database.New(dbConnection)}
+	db := database.New(dbConnection)
+	apiCfg := apiConfig{DB: db}
+
+	go startScrapping(db, 10, time.Minute)
 
 	router := chi.NewRouter()
 
@@ -67,6 +71,12 @@ func main() {
 
 	v1Router.Post("/feeds", apiCfg.middlewareAuth(apiCfg.handlerCreateFeed))
 	v1Router.Get("/feeds", apiCfg.handlerGetFeeds)
+
+	v1Router.Get("/posts", apiCfg.middlewareAuth(apiCfg.handlerGetPostsForUser))
+
+	v1Router.Post("/feed_follows", apiCfg.middlewareAuth(apiCfg.handlerFeedFollow))
+	v1Router.Get("/feed_follows", apiCfg.middlewareAuth(apiCfg.handlerGetFeedFollows))
+	v1Router.Delete("/feed_follows/{feedFollowID}", apiCfg.middlewareAuth(apiCfg.handlerDeleteFeedFollow))
 
 	router.Mount("/v1", v1Router)
 
