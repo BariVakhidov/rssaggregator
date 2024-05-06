@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/BariVakhidov/rssaggregator/internal/auth"
 	"github.com/BariVakhidov/rssaggregator/internal/database"
-	"net/http"
 )
 
 type authHandler func(http.ResponseWriter, *http.Request, database.User)

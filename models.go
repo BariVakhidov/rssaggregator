@@ -1,9 +1,10 @@
 package main
 
 import (
+	"time"
+
 	"github.com/BariVakhidov/rssaggregator/internal/database"
 	"github.com/google/uuid"
-	"time"
 )
 
 type User struct {
@@ -64,7 +65,7 @@ func databaseFeedToFeed(dbFeed database.Feed) Feed {
 }
 
 func databaseFeedsToFeeds(dbFeeds []database.Feed) []Feed {
-	var feedsArr []Feed
+	feedsArr := make([]Feed, 0, len(dbFeeds))
 
 	for _, dbFeed := range dbFeeds {
 		feedsArr = append(feedsArr, databaseFeedToFeed(dbFeed))
@@ -84,7 +85,7 @@ func databaseFeedFollowToFeedFollow(dbFeedFollow database.FeedFollow) FeedFollow
 }
 
 func databaseFeedFollowsToFeedFollows(dbFeedFollows []database.FeedFollow) []FeedFollow {
-	var feedFollowsArr []FeedFollow
+	feedFollowsArr := make([]FeedFollow, 0, len(dbFeedFollows))
 
 	for _, dbFeedFollow := range dbFeedFollows {
 		feedFollowsArr = append(feedFollowsArr, databaseFeedFollowToFeedFollow(dbFeedFollow))
@@ -113,7 +114,7 @@ func databasePostToPost(dbPost database.Post) Post {
 }
 
 func databasePostsToPosts(dbPosts []database.Post) []Post {
-	var postsArr []Post
+	postsArr := make([]Post, 0, len(dbPosts))
 
 	for _, dbPost := range dbPosts {
 		postsArr = append(postsArr, databasePostToPost(dbPost))

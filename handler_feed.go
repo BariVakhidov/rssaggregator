@@ -3,10 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/BariVakhidov/rssaggregator/internal/database"
-	"github.com/google/uuid"
 	"net/http"
 	"time"
+
+	"github.com/BariVakhidov/rssaggregator/internal/database"
+	"github.com/google/uuid"
 )
 
 func (apiCfg *apiConfig) handlerCreateFeed(w http.ResponseWriter, r *http.Request, user database.User) {

@@ -3,11 +3,12 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/BariVakhidov/rssaggregator/internal/database"
 	"github.com/go-chi/chi"
 	"github.com/google/uuid"
-	"net/http"
-	"time"
 )
 
 func (apiCfg *apiConfig) handlerFeedFollow(w http.ResponseWriter, r *http.Request, user database.User) {

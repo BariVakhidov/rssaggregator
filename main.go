@@ -2,17 +2,17 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
+	"log"
+	"net/http"
+	"os"
+	"time"
+
 	"github.com/BariVakhidov/rssaggregator/internal/database"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
-	"log"
-	"net/http"
-	"os"
-	"time"
 )
 
 type apiConfig struct {
@@ -82,7 +82,7 @@ func main() {
 
 	server := &http.Server{Addr: ":" + portString, Handler: router}
 
-	fmt.Printf("Server starting on port %v", server.Addr)
+	log.Printf("Server starting on port %v", server.Addr)
 	serverErr := server.ListenAndServe()
 
 	if serverErr != nil {
