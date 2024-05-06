@@ -1,7 +1,7 @@
-package main
+package handlers
 
 import "net/http"
 
-func handlerErr(w http.ResponseWriter, r *http.Request) {
+func HandlerErr(w http.ResponseWriter, _ *http.Request) {
 	respondWithError(w, http.StatusBadRequest, "BAD BAD REQUEST")
 }

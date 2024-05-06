@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"encoding/json"
@@ -6,12 +6,14 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/BariVakhidov/rssaggregator/db"
+
 	"github.com/BariVakhidov/rssaggregator/internal/database"
 	"github.com/go-chi/chi"
 	"github.com/google/uuid"
 )
 
-func (apiCfg *apiConfig) handlerFeedFollow(w http.ResponseWriter, r *http.Request, user database.User) {
+func (apiCfg *ApiConfig) HandlerFeedFollow(w http.ResponseWriter, r *http.Request, user database.User) {
 	type parameters struct {
 		FeedID uuid.UUID `json:"feed_id"`
 	}
@@ -40,10 +42,10 @@ func (apiCfg *apiConfig) handlerFeedFollow(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	respondWithJson(w, http.StatusCreated, databaseFeedFollowToFeedFollow(feedFollow))
+	respondWithJson(w, http.StatusCreated, db.DatabaseFeedFollowToFeedFollow(feedFollow))
 }
 
-func (apiCfg *apiConfig) handlerGetFeedFollows(w http.ResponseWriter, r *http.Request, user database.User) {
+func (apiCfg *ApiConfig) HandlerGetFeedFollows(w http.ResponseWriter, r *http.Request, user database.User) {
 	feedFollows, dbErr := apiCfg.DB.GetFeedFollows(r.Context(), user.ID)
 
 	if dbErr != nil {
@@ -51,10 +53,10 @@ func (apiCfg *apiConfig) handlerGetFeedFollows(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	respondWithJson(w, http.StatusCreated, databaseFeedFollowsToFeedFollows(feedFollows))
+	respondWithJson(w, http.StatusCreated, db.DatabaseFeedFollowsToFeedFollows(feedFollows))
 }
 
-func (apiCfg *apiConfig) handlerDeleteFeedFollow(w http.ResponseWriter, r *http.Request, user database.User) {
+func (apiCfg *ApiConfig) HandlerDeleteFeedFollow(w http.ResponseWriter, r *http.Request, user database.User) {
 	feedFollowIDStr := chi.URLParam(r, "feedFollowID")
 	feedFollowID, err := uuid.Parse(feedFollowIDStr)
 

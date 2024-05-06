@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"encoding/json"
@@ -18,7 +18,7 @@ func respondWithError(w http.ResponseWriter, code int, message string) {
 	respondWithJson(w, code, errorResponse{Error: message})
 }
 
-func respondWithJson(w http.ResponseWriter, code int, payload interface{}) {
+func respondWithJson(w http.ResponseWriter, code int, payload any) {
 	data, err := json.Marshal(payload)
 
 	if err != nil {

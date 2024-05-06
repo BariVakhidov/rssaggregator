@@ -1,23 +1,18 @@
 package main
 
 import (
-	"database/sql"
 	"log"
 	"net/http"
 	"os"
 	"time"
 
-	"github.com/BariVakhidov/rssaggregator/internal/database"
-	"github.com/go-chi/chi"
-	"github.com/go-chi/chi/v5/middleware"
-	"github.com/go-chi/cors"
+	"github.com/BariVakhidov/rssaggregator/api/handlers"
+	"github.com/BariVakhidov/rssaggregator/api/routes"
+	"github.com/BariVakhidov/rssaggregator/db"
+
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
-
-type apiConfig struct {
-	DB *database.Queries
-}
 
 func main() {
 	err := godotenv.Load()
@@ -31,54 +26,16 @@ func main() {
 		log.Fatal("No PORT provided")
 	}
 
-	dbPortString := os.Getenv("DB_URL")
-
-	if dbPortString == "" {
-		log.Fatal("No DB_URL provided")
-	}
-
-	dbConnection, dbErr := sql.Open("postgres", dbPortString)
+	dbInstance, dbErr := db.ConnectToDB()
 	if dbErr != nil {
-		log.Fatalln("Can't connect to db: ", dbErr)
+		log.Fatalln(dbErr)
 	}
 
-	db := database.New(dbConnection)
-	apiCfg := apiConfig{DB: db}
+	apiCfg := &handlers.ApiConfig{DB: dbInstance}
 
-	go startScrapping(db, 10, time.Minute)
+	go startScrapping(dbInstance, 10, time.Minute)
 
-	router := chi.NewRouter()
-
-	router.Use(cors.Handler(cors.Options{
-		AllowCredentials: false,
-		AllowedHeaders:   []string{"*"},
-		AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodDelete, http.MethodPut, http.MethodOptions},
-		AllowedOrigins:   []string{"https://*", "http://*"},
-		ExposedHeaders:   []string{"Link"},
-		MaxAge:           300,
-	}))
-	router.Use(middleware.RequestID)
-	router.Use(middleware.RealIP)
-	router.Use(middleware.Logger)
-	router.Use(middleware.Recoverer)
-
-	v1Router := chi.NewRouter()
-	v1Router.Get("/health", handlerReadiness)
-	v1Router.Get("/err", handlerErr)
-
-	v1Router.Post("/users", apiCfg.handlerCreateUser)
-	v1Router.Get("/users", apiCfg.middlewareAuth(apiCfg.handlerGetUserByAPIKey))
-
-	v1Router.Post("/feeds", apiCfg.middlewareAuth(apiCfg.handlerCreateFeed))
-	v1Router.Get("/feeds", apiCfg.handlerGetFeeds)
-
-	v1Router.Get("/posts", apiCfg.middlewareAuth(apiCfg.handlerGetPostsForUser))
-
-	v1Router.Post("/feed_follows", apiCfg.middlewareAuth(apiCfg.handlerFeedFollow))
-	v1Router.Get("/feed_follows", apiCfg.middlewareAuth(apiCfg.handlerGetFeedFollows))
-	v1Router.Delete("/feed_follows/{feedFollowID}", apiCfg.middlewareAuth(apiCfg.handlerDeleteFeedFollow))
-
-	router.Mount("/v1", v1Router)
+	router := routes.InitRouter(apiCfg)
 
 	server := &http.Server{Addr: ":" + portString, Handler: router}
 

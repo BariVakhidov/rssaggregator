@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"encoding/json"
@@ -6,11 +6,13 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/BariVakhidov/rssaggregator/db"
+
 	"github.com/BariVakhidov/rssaggregator/internal/database"
 	"github.com/google/uuid"
 )
 
-func (apiCfg *apiConfig) handlerCreateFeed(w http.ResponseWriter, r *http.Request, user database.User) {
+func (apiCfg *ApiConfig) HandlerCreateFeed(w http.ResponseWriter, r *http.Request, user database.User) {
 	type parameters struct {
 		Name string `json:"name"`
 		Url  string `json:"url"`
@@ -41,10 +43,10 @@ func (apiCfg *apiConfig) handlerCreateFeed(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	respondWithJson(w, http.StatusCreated, databaseFeedToFeed(newFeed))
+	respondWithJson(w, http.StatusCreated, db.DatabaseFeedToFeed(newFeed))
 }
 
-func (apiCfg *apiConfig) handlerGetFeeds(w http.ResponseWriter, r *http.Request) {
+func (apiCfg *ApiConfig) HandlerGetFeeds(w http.ResponseWriter, r *http.Request) {
 	feeds, dbErr := apiCfg.DB.GetFeeds(r.Context())
 
 	if dbErr != nil {
@@ -52,5 +54,5 @@ func (apiCfg *apiConfig) handlerGetFeeds(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	respondWithJson(w, http.StatusCreated, databaseFeedsToFeeds(feeds))
+	respondWithJson(w, http.StatusCreated, db.DatabaseFeedsToFeeds(feeds))
 }
