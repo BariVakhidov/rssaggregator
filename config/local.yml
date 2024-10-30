@@ -1,0 +1,7 @@
+env: "local"
+port: 8085
+addr:
+  db: "localhost:5432"
+grpc:
+  port: 8080
+  timeout: 10h

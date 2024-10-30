@@ -1,18 +1,27 @@
 services:
   db:
     image: postgres
-    container_name: local_pgdb
+    container_name: local_rss
     restart: always
     ports:
-      - "5432:5432"
+      - "5433:5432"
     environment:
-      POSTGRES_USER: user-name
-      POSTGRES_PASSWORD: strong-password
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: rssaggregator
     volumes:
-      - local_pgdata:/var/lib/postgresql/data
+      - local_rss:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s        # Time between running the check (e.g., every 10 seconds)
+      timeout: 5s          # Time to wait for the health check to succeed
+      retries: 5           # Number of consecutive failures needed to mark the container as unhealthy
+      start_period: 30s
+    networks:
+      - rss-net
   pgadmin:
     image: dpage/pgadmin4
-    container_name: pgadmin4_container
+    container_name: pgadmin_rss
     restart: always
     ports:
       - "8888:80"
@@ -20,8 +29,26 @@ services:
       PGADMIN_DEFAULT_EMAIL: user-name@domain-name.com
       PGADMIN_DEFAULT_PASSWORD: strong-password
     volumes:
-      - pgadmin-data:/var/lib/pgadmin
+      - pgadmin-rss:/var/lib/pgadmin
+    networks:
+      - rss-net
+  rss:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rss_server
+    ports:
+      - 8085:8085
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - rss-net
 
 volumes:
-  local_pgdata:
-  pgadmin-data:
+  local_rss:
+  pgadmin-rss:
+
+networks:
+  rss-net:
+    driver: bridge

@@ -1,0 +1,14 @@
+with-expecter: true
+log-level: warn
+all: true # Optional: If you want to generate mocks for all interfaces.
+packages:
+  github.com/BariVakhidov/rssaggregator/internal/service/user:
+    config:
+      dir: "./internal/mocks"
+      outpkg: mocks
+      recursive: true
+  github.com/BariVakhidov/rssaggregator/internal/service/event_consumer:
+    config:
+      dir: "./internal/mocks"
+      outpkg: mocks
+      recursive: true

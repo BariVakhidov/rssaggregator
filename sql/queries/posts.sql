@@ -1,7 +1,12 @@
 -- name: CreatePost :one
-INSERT INTO posts( id, created_at, updated_at, title, url, feed_id, published_at, description )
-VALUES ( $1, $2, $3, $4, $5, $6, $7, $8 )
+INSERT INTO posts( id, title, url, feed_id, published_at, description )
+VALUES ( $1, $2, $3, $4, $5, $6 )
 RETURNING *;
+
+-- name: GetPost :one
+SELECT * FROM posts
+WHERE url = $1;
+
 
 -- name: GetPostsForUser :many
 SELECT posts.* from posts

@@ -1,0 +1,300 @@
+basePath: /v1
+definitions:
+  model.APIErr:
+    properties:
+      msg: {}
+      status_code:
+        type: integer
+    type: object
+  model.Feed:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      updated_at:
+        type: string
+      url:
+        type: string
+    type: object
+  model.FeedFollow:
+    properties:
+      created_at:
+        type: string
+      feed_id:
+        type: string
+      id:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
+    type: object
+  model.FeedFollowInfo:
+    properties:
+      feed_id:
+        type: string
+    type: object
+  model.FeedInfo:
+    properties:
+      name:
+        type: string
+      url:
+        type: string
+    type: object
+  model.Post:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      feed_id:
+        type: string
+      id:
+        type: string
+      published_at:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+      url:
+        type: string
+    type: object
+  model.User:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  model.UserInfo:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+    type: object
+host: rssaggregator.swagger.io
+info:
+  contact: {}
+  description: This is a RSS Aggregator server. API
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: RSS Aggregator API
+  version: "1.0"
+paths:
+  /feed_follows:
+    post:
+      consumes:
+      - application/json
+      description: Add a new RSS feed follow to the user.
+      parameters:
+      - description: Feed Request Body
+        in: body
+        name: feed
+        required: true
+        schema:
+          $ref: '#/definitions/model.FeedFollowInfo'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.FeedFollow'
+        "400":
+          description: Invalid input or validation errors
+          schema:
+            $ref: '#/definitions/model.APIErr'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/model.APIErr'
+      summary: Create a new feed follow
+      tags:
+      - Feeds
+  /feed_follows/{feedFollowID}:
+    delete:
+      description: Unfollow a feed for the authenticated user.
+      parameters:
+      - description: Feed Follow ID
+        in: path
+        name: feedFollowID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully unfollowed the feed
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/model.APIErr'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/model.APIErr'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/model.APIErr'
+      summary: Delete a feed follow
+      tags:
+      - Feeds
+  /feeds:
+    get:
+      description: Retrieve a list of all feeds.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of feeds
+          schema:
+            items:
+              $ref: '#/definitions/model.Feed'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/model.APIErr'
+      summary: Get all feeds
+      tags:
+      - Feeds
+    post:
+      consumes:
+      - application/json
+      description: Add a new RSS feed to the system.
+      parameters:
+      - description: Feed Request Body
+        in: body
+        name: feed
+        required: true
+        schema:
+          $ref: '#/definitions/model.FeedInfo'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Feed'
+        "400":
+          description: Invalid input or validation errors
+          schema:
+            $ref: '#/definitions/model.APIErr'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/model.APIErr'
+      summary: Create a new feed
+      tags:
+      - Feeds
+  /posts:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve user posts.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of posts of followed feeds
+          schema:
+            items:
+              $ref: '#/definitions/model.Post'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.APIErr'
+      summary: Get user posts
+      tags:
+      - Post
+  /users:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve user information by user ID.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.User'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.APIErr'
+      summary: Get user by ID from auth_token
+      tags:
+      - User
+    post:
+      consumes:
+      - application/json
+      description: Create new user with credentials.
+      parameters:
+      - description: User Request Body
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/model.UserInfo'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.APIErr'
+      summary: Register user
+      tags:
+      - User
+  /uses/login:
+    post:
+      consumes:
+      - application/json
+      description: Login user.
+      parameters:
+      - description: User Request Body
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/model.UserInfo'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.APIErr'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/model.APIErr'
+        "423":
+          description: Locked
+          schema:
+            $ref: '#/definitions/model.APIErr'
+      summary: Login user
+      tags:
+      - User
+swagger: "2.0"

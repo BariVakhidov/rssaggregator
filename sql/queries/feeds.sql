@@ -1,10 +1,15 @@
 -- name: CreateFeed :one
-INSERT INTO feeds(id,created_at,updated_at,name,url,user_id)
-VALUES ($1,$2,$3,$4,$5,$6)
+INSERT INTO feeds(id,name,url)
+VALUES ($1,$2,$3)
 RETURNING *;
 
 -- name: GetFeeds :many
 SELECT * from feeds;
+
+-- name: GetFeedsByUser :many
+SELECT feeds.* from feeds INNER JOIN feed_follows ON feed.id = feed_follows.feed_id
+WHERE feed_follows.user_id = $1
+ORDER BY feeds.created_at;
 
 -- name: GetNextFeedsToFetch :many
 SELECT * from feeds
