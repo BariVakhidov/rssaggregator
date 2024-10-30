@@ -23,6 +23,6 @@ type Storage interface {
 	Posts(ctx context.Context, userId uuid.UUID, limit int) ([]model.Post, error)
 }
 
-type serviceProvider struct {
-	storage Storage
-}
+// type serviceProvider struct {
+// 	storage Storage
+// }

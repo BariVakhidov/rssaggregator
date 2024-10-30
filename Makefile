@@ -1,7 +1,7 @@
 lint:
 	golangci-lint run -c ./golangci.yml ./...
 
-build:
+build: lint
 	go build -o bin/app ./cmd/rssaggregator
 
 run: build

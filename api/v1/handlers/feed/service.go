@@ -27,7 +27,6 @@ type Implementation struct {
 }
 
 func New(log *slog.Logger, feedService FeedService) *Implementation {
-
 	return &Implementation{
 		log:         log,
 		feedService: feedService,

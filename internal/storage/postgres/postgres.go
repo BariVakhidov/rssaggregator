@@ -30,7 +30,6 @@ type Storage struct {
 }
 
 func New(log *slog.Logger, dbAddr string) (*Storage, error) {
-
 	const op = "storage.postgres.New"
 
 	var (
@@ -181,7 +180,6 @@ func (s *Storage) Posts(ctx context.Context, userId uuid.UUID, limit int) ([]mod
 			if pgErr.Code == storage.InvalidTextRepresentation {
 				return nil, fmt.Errorf("%s: %w", op, storage.ErrInvalidParams)
 			}
-
 		}
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}

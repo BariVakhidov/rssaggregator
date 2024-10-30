@@ -19,8 +19,6 @@ func New(log *slog.Logger,
 	brokers []string,
 	topic string,
 ) *App {
-	
-
 	consumer := kafka.NewConsumer(log, brokers, "user-consumer-group", topic)
 	userConsumer := eventconsumer.New(log, userSaver, consumer)
 

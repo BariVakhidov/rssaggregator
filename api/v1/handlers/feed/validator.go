@@ -15,4 +15,3 @@ func (i *Implementation) validateFeedInfo(feedInfo model.FeedInfo) map[string]st
 
 	return errors
 }
-
