@@ -22,6 +22,3 @@ go.work
 
 # Local env
 .env
-
-# Mock files
-/internal/mocks
