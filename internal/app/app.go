@@ -9,6 +9,7 @@ import (
 	httpapp "github.com/BariVakhidov/rssaggregator/internal/app/http"
 	rssfetcherapp "github.com/BariVakhidov/rssaggregator/internal/app/rss_fetcher"
 	storageapp "github.com/BariVakhidov/rssaggregator/internal/app/storage"
+	jaegerapp "github.com/BariVakhidov/rssaggregator/internal/app/tracing/jaeger"
 	"github.com/BariVakhidov/rssaggregator/internal/clients/sso/grpc"
 	"github.com/BariVakhidov/rssaggregator/internal/config"
 	"github.com/BariVakhidov/rssaggregator/internal/lib/logger/sl"
@@ -17,14 +18,16 @@ import (
 	"github.com/BariVakhidov/rssaggregator/internal/service/feed"
 	postservice "github.com/BariVakhidov/rssaggregator/internal/service/post"
 	userservice "github.com/BariVakhidov/rssaggregator/internal/service/user"
+	"go.opentelemetry.io/otel"
 )
 
 type App struct {
-	log          *slog.Logger
-	httpApp      *httpapp.App
-	rssFetcher   *rssfetcherapp.App
-	userConsumer *kafkaconsumerapp.App
-	storage      *storageapp.App
+	log            *slog.Logger
+	httpApp        *httpapp.App
+	rssFetcher     *rssfetcherapp.App
+	userConsumer   *kafkaconsumerapp.App
+	storage        *storageapp.App
+	tracerProvider *jaegerapp.App
 }
 
 func New(log *slog.Logger, cfg *config.Config) *App {
@@ -35,11 +38,17 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 
 	grpcAuth, err := grpc.New(log, "host.docker.internal:8080", 5, time.Millisecond*100)
 	if err != nil {
-		log.Error("shit", sl.Err(err))
+		log.Error("failed to create auth client", sl.Err(err))
 	}
 
+	tracerProvider, err := jaegerapp.New(log, "host.docker.internal:4318")
+	if err != nil {
+		log.Error("failed to create tracerApp", sl.Err(err))
+	}
+	tracer := otel.Tracer("rssaggregator")
+
 	uuidGenerator := uuidgenerator.New()
-	userService := userservice.New(log, storage.Storage, grpcAuth, uuidGenerator)
+	userService := userservice.New(log, storage.Storage, grpcAuth, uuidGenerator, tracer)
 	feedService := feed.New(log, storage.Storage)
 	postService := postservice.New(log, storage.Storage)
 
@@ -57,11 +66,12 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 	httpApp := httpapp.New(httpAppOpts, feedService, userService, postService)
 
 	return &App{
-		log:          log,
-		httpApp:      httpApp,
-		rssFetcher:   rssFetcher,
-		userConsumer: userConsumer,
-		storage:      storage,
+		log:            log,
+		httpApp:        httpApp,
+		rssFetcher:     rssFetcher,
+		userConsumer:   userConsumer,
+		storage:        storage,
+		tracerProvider: tracerProvider,
 	}
 }
 
@@ -77,4 +87,5 @@ func (a *App) Stop() {
 	a.httpApp.Stop(ctx)
 	a.userConsumer.Stop()
 	a.storage.Stop()
+	a.tracerProvider.Stop(ctx)
 }

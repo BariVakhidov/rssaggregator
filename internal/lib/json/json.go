@@ -14,6 +14,7 @@ func RespondWithError(w http.ResponseWriter, log *slog.Logger, err error) {
 	if !ok {
 		errResp := model.APIErr{StatusCode: http.StatusInternalServerError, Msg: "internal error"}
 		RespondWithJson(w, log, http.StatusInternalServerError, errResp)
+		return
 	}
 
 	RespondWithJson(w, log, apiErr.StatusCode, apiErr)

@@ -2,6 +2,7 @@ package httpserver
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -27,7 +28,7 @@ func New(log *slog.Logger, port int, router http.Handler) *Server {
 }
 
 func (s *Server) MustRun() {
-	if err := s.Run(); err != nil {
+	if err := s.Run(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		panic(err)
 	}
 }

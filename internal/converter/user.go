@@ -10,6 +10,7 @@ func DatabaseUserToUser(user database.User) model.User {
 		ID:        user.ID,
 		UpdatedAt: user.UpdatedAt.Time,
 		CreatedAt: user.CreatedAt.Time,
+		Email:     user.Email,
 	}
 }
 

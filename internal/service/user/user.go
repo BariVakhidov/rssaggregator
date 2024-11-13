@@ -11,6 +11,7 @@ import (
 	"github.com/BariVakhidov/rssaggregator/internal/storage"
 	ssov1 "github.com/BariVakhidov/ssoprotos/gen/go/sso"
 	"github.com/google/uuid"
+	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -36,19 +37,30 @@ type UserService struct {
 	userStorage   UserStorage
 	authService   AuthService
 	uuidGenerator UUUIDGenerator
+	tracer        trace.Tracer
 }
 
-func New(log *slog.Logger, userStorage UserStorage, authService AuthService, uuidGenerator UUUIDGenerator) *UserService {
+func New(log *slog.Logger,
+	userStorage UserStorage,
+	authService AuthService,
+	uuidGenerator UUUIDGenerator,
+	tracer trace.Tracer,
+) *UserService {
 	return &UserService{
 		log:           log,
 		userStorage:   userStorage,
 		authService:   authService,
 		uuidGenerator: uuidGenerator,
+		tracer:        tracer,
 	}
 }
 
 func (u *UserService) processPendingUser(ctx context.Context, userInfo model.UserInfo) (uuid.UUID, error) {
+	ctx, span := u.tracer.Start(ctx, "processPendingUser")
+	defer span.End()
+
 	pendingUser, err := u.userStorage.PendingUserByEmail(ctx, userInfo.Email)
+
 	if err == nil {
 		if pendingUser.Status != model.UserStatusFailed {
 			return uuid.Nil, errors.New("wrong pending user status")
@@ -84,20 +96,24 @@ func (u *UserService) CreateUser(ctx context.Context, userInfo model.UserInfo) e
 		slog.String("name", userInfo.Email),
 	)
 
+	ctx, span := u.tracer.Start(ctx, "CreateUser")
 	pendingUserId, err := u.processPendingUser(ctx, userInfo)
+	span.End()
 	if err != nil {
 		log.Error("failed to process pending user", sl.Err(err))
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
+	ctx, span = u.tracer.Start(ctx, "authService.Register")
 	_, err = u.authService.Register(ctx, &ssov1.RegisterRequest{
 		Email:    userInfo.Email,
 		Password: userInfo.Password,
 	})
+	span.End()
 	if err != nil {
 		log.Error("failed to register new user", sl.Err(err))
 
-		_, dbErr := u.userStorage.ChangePendingUserStatus(ctx, pendingUserId, model.UserStatusProcessed)
+		_, dbErr := u.userStorage.ChangePendingUserStatus(ctx, pendingUserId, model.UserStatusFailed)
 		if dbErr != nil {
 			log.Error("failed to change pending user status", sl.Err(err))
 		}
@@ -119,11 +135,13 @@ func (u *UserService) Login(ctx context.Context, userInfo model.UserInfo) (strin
 		slog.String("name", userInfo.Email),
 	)
 
+	ctx, span := u.tracer.Start(ctx, "authService.Login")
 	resp, err := u.authService.Login(ctx, &ssov1.LoginRequest{
 		Email:    userInfo.Email,
 		Password: userInfo.Password,
-		AppId:    "7fae8df7-8cb7-4977-8165-9faedba62ddd",
+		AppId:    "af9956b0-4396-4fc9-8ea5-b00955e87eb6",
 	})
+	span.End()
 
 	if err != nil {
 		log.Error("failed to login user", sl.Err(err))
@@ -150,6 +168,9 @@ func (u *UserService) User(ctx context.Context, userID uuid.UUID) (*model.User, 
 		slog.String("op", op),
 		slog.String("userId", userID.String()),
 	)
+
+	ctx, span := u.tracer.Start(ctx, op)
+	defer span.End()
 
 	user, err := u.userStorage.GetUser(ctx, userID)
 	if err != nil {
